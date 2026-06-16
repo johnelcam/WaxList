@@ -1,0 +1,170 @@
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,500&display=swap');
+@import "tailwindcss";
+
+:root {
+  --dark: #181a0b;
+  --dark-2: #20230f;
+  --dark-3: #2a2d15;
+  --cream: #efe9d3;
+  --paper: #f4efdd;
+  --line-cream: #d7d0b4;
+  --line-dark: #36381f;
+  --ink: #1a1d0d;
+  --pale: #edf0a2;
+  --orange: #dc4f1e;
+  --orange-2: #c4451a;
+  --muted-dark: #b7b6a0;
+  --muted-cream: #61604c;
+  --faint: #8a8970;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--dark);
+  color: var(--cream);
+  font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--orange);
+  color: var(--cream);
+}
+
+::-webkit-scrollbar {
+  width: 11px;
+}
+::-webkit-scrollbar-track {
+  background: var(--dark);
+}
+::-webkit-scrollbar-thumb {
+  background: #3a3d22;
+  border-radius: 8px;
+  border: 3px solid var(--dark);
+}
+
+/* ── type ─────────────────────────────────────────────── */
+.display {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 0.96;
+}
+.accent-i {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--orange);
+  letter-spacing: -0.01em;
+}
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* ── buttons (dria pill) ──────────────────────────────── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--cream);
+  color: var(--ink);
+  border: none;
+  border-radius: 999px;
+  padding: 7px 7px 7px 22px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  line-height: 1;
+}
+.pill:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pill > .knob {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--orange);
+  color: var(--cream);
+  flex-shrink: 0;
+}
+.pill--orange {
+  background: var(--orange);
+  color: var(--cream);
+}
+.pill--orange > .knob {
+  background: var(--cream);
+  color: var(--orange);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 9px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid currentColor;
+  background: transparent;
+  text-decoration: none;
+  line-height: 1;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── surfaces ─────────────────────────────────────────── */
+.card-dark {
+  background: var(--dark-2);
+  border: 1px solid var(--line-dark);
+  border-radius: 18px;
+}
+.card-cream {
+  background: var(--paper);
+  border: 1px solid var(--line-cream);
+  border-radius: 18px;
+  color: var(--ink);
+}
+
+.input {
+  width: 100%;
+  background: var(--dark);
+  border: 1px solid var(--line-dark);
+  border-radius: 10px;
+  padding: 11px 13px;
+  font-size: 14px;
+  color: var(--cream);
+  outline: none;
+  font-family: inherit;
+}
+.input::placeholder {
+  color: var(--faint);
+}
