@@ -28,7 +28,7 @@ const Arrow = () => (
 );
 
 export default function Home() {
-  const { account, balance, chainOk, connecting, connect, refreshBalance } = useWallet();
+  const { account, balance, chainOk, connecting, connect, disconnect, refreshBalance } = useWallet();
 
   const [machine, setMachine] = useState<Machine>({ pullPrice: 0n, cards: 0n, revenue: 0n, owner: "" });
   const [recent, setRecent] = useState<Card[]>([]);
@@ -124,7 +124,7 @@ export default function Home() {
 
   return (
     <div style={{ minHeight: "100vh" }}>
-      <Header account={account} balance={balance} chainOk={chainOk} connecting={connecting} onConnect={connect} />
+      <Header account={account} balance={balance} chainOk={chainOk} connecting={connecting} onConnect={connect} onDisconnect={disconnect} />
 
       <>
           {/* hero */}
@@ -144,7 +144,10 @@ export default function Home() {
                 </p>
                 <div style={{ display: "flex", gap: 12, marginTop: 28, flexWrap: "wrap" }}>
                   <a href="#machine" className="pill">Pull a card <Arrow /></a>
-                  <a href="#drops" className="btn" style={{ color: "var(--cream)" }}>See the drops</a>
+                  <a href="#drops" className="link" style={{ marginLeft: 6 }}>
+                    <span>See the drops</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </a>
                 </div>
                 <div style={{ display: "flex", gap: 34, marginTop: 40, flexWrap: "wrap" }}>
                   {[

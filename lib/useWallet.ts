@@ -1,20 +1,24 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ethers } from "ethers";
 import { ARC_RPC, ARC_CHAIN_HEX, switchToArc } from "./arcNetwork";
 import { ensureDiscovered, pickProvider, pickDetail, setChosenRdns } from "./wallet";
 
+const DISCONNECT_KEY = "waxlist.disconnected";
+
 /**
  * Single source of truth for wallet state. Discovers wallets via EIP-6963
  * (Rabby first), pins the chosen one, and uses that same provider for reads,
- * writes and events. The page owns this state and feeds it to the header.
+ * writes and events. Supports an explicit disconnect that survives reloads
+ * (the wallet stays "forgotten" until the user connects again).
  */
 export function useWallet() {
   const [account, setAccount] = useState("");
   const [balance, setBalance] = useState("");
   const [chainOk, setChainOk] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const disconnectedRef = useRef(false);
 
   const refreshBalance = useCallback(async (addr: string) => {
     try {
@@ -27,11 +31,19 @@ export function useWallet() {
   }, []);
 
   const connect = useCallback(async () => {
+    disconnectedRef.current = false;
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem(DISCONNECT_KEY);
+      } catch {
+        /* ignore */
+      }
+    }
     await ensureDiscovered();
     const detail = pickDetail();
     const inj = detail?.provider;
     if (!inj) return;
-    setChosenRdns(detail.rdns); // pin this wallet for all later calls
+    setChosenRdns(detail.rdns);
     setConnecting(true);
     try {
       const accs = (await inj.request({ method: "eth_requestAccounts" })) as string[];
@@ -52,27 +64,47 @@ export function useWallet() {
     }
   }, [refreshBalance]);
 
+  const disconnect = useCallback(() => {
+    disconnectedRef.current = true;
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(DISCONNECT_KEY, "1");
+      } catch {
+        /* ignore */
+      }
+    }
+    setAccount("");
+    setBalance("");
+    setChainOk(false);
+  }, []);
+
   useEffect(() => {
     let cleanup = () => {};
+    if (typeof window !== "undefined" && window.localStorage.getItem(DISCONNECT_KEY) === "1") {
+      disconnectedRef.current = true;
+    }
     (async () => {
       await ensureDiscovered();
       const inj = pickProvider();
       if (!inj) return;
-      try {
-        const accs = (await inj.request({ method: "eth_accounts" })) as string[];
-        if (accs.length) {
-          setAccount(accs[0]);
-          refreshBalance(accs[0]);
-          inj
-            .request({ method: "eth_chainId" })
-            .then((id) => setChainOk((id as string).toLowerCase() === ARC_CHAIN_HEX.toLowerCase()))
-            .catch(() => {});
+      if (!disconnectedRef.current) {
+        try {
+          const accs = (await inj.request({ method: "eth_accounts" })) as string[];
+          if (accs.length) {
+            setAccount(accs[0]);
+            refreshBalance(accs[0]);
+            inj
+              .request({ method: "eth_chainId" })
+              .then((id) => setChainOk((id as string).toLowerCase() === ARC_CHAIN_HEX.toLowerCase()))
+              .catch(() => {});
+          }
+        } catch {
+          /* ignore */
         }
-      } catch {
-        /* ignore */
       }
       if (!inj.on) return;
       const onAcc = (a: unknown) => {
+        if (disconnectedRef.current) return; // stay forgotten until reconnect
         const list = a as string[];
         if (list.length) {
           setAccount(list[0]);
@@ -95,5 +127,5 @@ export function useWallet() {
     return () => cleanup();
   }, [refreshBalance]);
 
-  return { account, balance, chainOk, connecting, connect, refreshBalance };
+  return { account, balance, chainOk, connecting, connect, disconnect, refreshBalance };
 }
