@@ -1,10 +1,12 @@
-// EIP-6963 multi-wallet discovery.
+// ---------------------------------------------------------------------------
+// Wallet discovery via EIP-6963.
 //
-// When several wallets are installed (Rabby, MetaMask, OKX, Phantom…) they all
-// fight over window.ethereum and requests get swallowed. EIP-6963 lets each
-// wallet announce itself, so we can pick a specific one (Rabby by default)
-// instead of the unreliable window.ethereum — and pin that choice so reads,
-// writes and event listeners all use the same provider.
+// With multiple extensions installed (MetaMask, Rabby, OKX, Phantom, …) they
+// race to own window.ethereum and stray requests get eaten. EIP-6963 has each
+// wallet announce itself by event, so we can lock onto one specific provider
+// (Rabby preferred) and reuse it for every read, write and subscription rather
+// than trusting the ambient window.ethereum.
+// ---------------------------------------------------------------------------
 
 export interface Eip1193Provider {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
@@ -19,54 +21,65 @@ interface ProviderDetail {
   provider: Eip1193Provider;
 }
 
-const discovered: ProviderDetail[] = [];
-const RDNS_KEY = "waxlist.wallet";
+// Wallets we fall back to, in order, when nothing has been pinned yet.
 const PREFERENCE = ["io.rabby", "io.metamask"];
 
-function record(detail?: ProviderDetail) {
+// localStorage key for the pinned wallet's rdns. Built from a namespace +
+// a slug so the scheme is consistent across the app's stored values.
+const STORE_NS = "wl";
+const pinnedRdnsStoreKey = [STORE_NS, "pinned", "rdns"].join(":");
+
+// Every provider that has announced itself this session.
+const announced: ProviderDetail[] = [];
+
+function upsert(detail?: ProviderDetail) {
   if (!detail?.info?.rdns || !detail.provider) return;
-  const i = discovered.findIndex((d) => d.info.rdns === detail.info.rdns);
-  if (i === -1) discovered.push(detail);
-  else discovered[i] = detail;
+  const at = announced.findIndex((d) => d.info.rdns === detail.info.rdns);
+  if (at === -1) announced.push(detail);
+  else announced[at] = detail;
 }
 
 if (typeof window !== "undefined") {
   window.addEventListener("eip6963:announceProvider", (e: Event) => {
-    record((e as CustomEvent<ProviderDetail>).detail);
+    upsert((e as CustomEvent<ProviderDetail>).detail);
   });
   window.dispatchEvent(new Event("eip6963:requestProvider"));
-}
-
-export function getChosenRdns(): string {
-  if (typeof window === "undefined") return "";
-  try {
-    return window.localStorage.getItem(RDNS_KEY) || "";
-  } catch {
-    return "";
-  }
 }
 
 export function setChosenRdns(rdns: string) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(RDNS_KEY, rdns);
+    window.localStorage.setItem(pinnedRdnsStoreKey, rdns);
   } catch {
     /* ignore */
   }
 }
 
+export function getChosenRdns(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem(pinnedRdnsStoreKey) || "";
+  } catch {
+    return "";
+  }
+}
+
+export function refreshWallets() {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("eip6963:requestProvider"));
+}
+
 /** Resolve once at least one wallet has announced (or a short timeout). */
 export function ensureDiscovered(timeoutMs = 250): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
-  if (discovered.length) {
+  if (announced.length) {
     window.dispatchEvent(new Event("eip6963:requestProvider"));
     return Promise.resolve();
   }
   return new Promise<void>((resolve) => {
-    let done = false;
+    let settled = false;
     const finish = () => {
-      if (done) return;
-      done = true;
+      if (settled) return;
+      settled = true;
       window.removeEventListener("eip6963:announceProvider", onAnnounce);
       resolve();
     };
@@ -77,13 +90,9 @@ export function ensureDiscovered(timeoutMs = 250): Promise<void> {
   });
 }
 
-export function refreshWallets() {
-  if (typeof window !== "undefined") window.dispatchEvent(new Event("eip6963:requestProvider"));
-}
-
 export function listWallets() {
   refreshWallets();
-  return discovered.map((d) => ({ name: d.info.name, rdns: d.info.rdns, icon: d.info.icon }));
+  return announced.map((d) => ({ name: d.info.name, rdns: d.info.rdns, icon: d.info.icon }));
 }
 
 /** Best matching provider detail — pinned choice, then preference, then any. */
@@ -91,14 +100,14 @@ export function pickDetail(rdns?: string): { provider: Eip1193Provider; rdns: st
   refreshWallets();
   const want = rdns ?? getChosenRdns();
   if (want) {
-    const m = discovered.find((d) => d.info.rdns === want);
-    if (m) return { provider: m.provider, rdns: m.info.rdns };
+    const hit = announced.find((d) => d.info.rdns === want);
+    if (hit) return { provider: hit.provider, rdns: hit.info.rdns };
   }
-  for (const r of PREFERENCE) {
-    const m = discovered.find((d) => d.info.rdns === r);
-    if (m) return { provider: m.provider, rdns: m.info.rdns };
+  for (const pref of PREFERENCE) {
+    const hit = announced.find((d) => d.info.rdns === pref);
+    if (hit) return { provider: hit.provider, rdns: hit.info.rdns };
   }
-  if (discovered[0]) return { provider: discovered[0].provider, rdns: discovered[0].info.rdns };
+  if (announced[0]) return { provider: announced[0].provider, rdns: announced[0].info.rdns };
   return undefined;
 }
 
