@@ -86,9 +86,9 @@ a {
   letter-spacing: -0.01em;
 }
 .label {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 
@@ -227,27 +227,37 @@ a {
   transform: translateX(3px);
 }
 
-/* wallet dropdown */
-.menu-item {
+/* wallet dropdown — soft cream pellets, wax-machine feel */
+.wax-opt {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
   width: 100%;
-  padding: 9px 12px;
-  background: none;
+  padding: 10px 13px;
+  margin-bottom: 3px;
+  background: var(--dark-3);
   border: none;
-  border-radius: 9px;
+  border-radius: 999px;
   color: var(--cream);
   font-family: inherit;
   font-size: 13.5px;
-  font-weight: 500;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
   text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.menu-item:hover {
-  background: var(--dark-3);
+.wax-opt:last-child {
+  margin-bottom: 0;
 }
-.menu-item.danger {
+.wax-opt:hover {
+  background: var(--cream);
+  color: var(--ink);
+}
+.wax-opt.danger {
   color: #e58b6b;
+}
+.wax-opt.danger:hover {
+  background: var(--orange);
+  color: var(--cream);
 }

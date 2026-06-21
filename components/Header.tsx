@@ -115,15 +115,15 @@ export default function Header({ account, balance, chainOk, connecting, onConnec
                         <div style={{ fontSize: 11, color: "var(--faint)", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 3 }}>Connected</div>
                         <div style={{ fontSize: 13, color: "var(--cream)", fontFamily: "ui-monospace, monospace" }}>{account.slice(0, 12)}…{account.slice(-8)}</div>
                       </div>
-                      <button className="menu-item" onClick={copy}>
+                      <button className="wax-opt" onClick={copy}>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.8" /><path d="M5 15V5a2 2 0 012-2h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
                         {copied ? "Copied!" : "Copy address"}
                       </button>
-                      <a className="menu-item" href={`${ARCSCAN}/address/${account}`} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}>
+                      <a className="wax-opt" href={`${ARCSCAN}/address/${account}`} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M14 4h6v6M20 4l-9 9M19 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
                         View on ArcScan
                       </a>
-                      <button className="menu-item danger" onClick={() => { setOpen(false); onDisconnect(); }}>
+                      <button className="wax-opt danger" onClick={() => { setOpen(false); onDisconnect(); }}>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M15 12H4m0 0l4-4m-4 4l4 4M9 4h8a2 2 0 012 2v12a2 2 0 01-2 2H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
                         Disconnect
                       </button>
